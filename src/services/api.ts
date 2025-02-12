@@ -78,6 +78,17 @@ interface InvoiceItem {
   unit_name?: string;
 }
 
+interface Company {
+  id: number;
+  name: string;
+  address?: string;
+  gst?: string;
+  phone?: string;
+  email?: string;
+  logo?: string;
+  created_at: string;
+}
+
 interface Invoice {
   id: number;
   invoice_number: string;
@@ -90,12 +101,14 @@ interface Invoice {
   subtotal: number;
   manualDiscount: number;
   manual_discount: number;
-  schemeDiscount: number;
-  scheme_discount: number;
+  previousBalance: number;
+  previous_balance: number;
   totalDiscount: number;
   total_discount: number;
   totalTax: number;
   total_tax: number;
+  charges: number;
+  paid_amount: number;
   total: number;
   status: 'draft' | 'created' | 'paid' | 'cancelled';
   created_at: string;
@@ -113,6 +126,22 @@ async function handleResponse<T>(response: Response): Promise<T> {
 }
 
 export const api = {
+  company: {
+    get: async (): Promise<Company> => {
+      const response = await fetch(`${API_URL}/company`);
+      return handleResponse<Company>(response);
+    },
+
+    update: async (data: Omit<Company, 'id' | 'created_at'>): Promise<{ id: number; logo?: string; message: string }> => {
+      const response = await fetch(`${API_URL}/company`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      return handleResponse<{ id: number; logo?: string; message: string }>(response);
+    },
+  },
+
   auth: {
     signUp: async (email: string, password: string): Promise<User> => {
       const response = await fetch(`${API_URL}/auth/signup`, {

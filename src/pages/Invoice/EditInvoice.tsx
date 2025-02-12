@@ -13,74 +13,7 @@ import AuthLayout from '../../components/Layout/AuthLayout';
 import InvoiceFooter, { calculateItemTotal, calculateTotals } from '../../components/InvoiceFooter';
 import InvoiceHeader from '../../components/InvoiceHeader';
 import InvoiceItems from '../../components/InvoiceItems';
-
-interface Customer {
-  id: number;
-  name: string;
-  phone?: string;
-  type: 'wholesale' | 'retail';
-}
-
-interface ProductUnit {
-  id: number;
-  unitId: number;
-  conversionRate: number;
-  retailRate: number;
-  wholesaleRate: number;
-  unit_name?: string;
-}
-
-interface Product {
-  id: number;
-  name: string;
-  code: string;
-  baseRate: number;
-  baseWholesaleRate: number | null;
-  taxPercentage: number;
-  baseUnitId: number;
-  base_unit_name?: string;
-  units?: ProductUnit[];
-}
-
-interface UnitOption {
-  unitId: number;
-  conversionRate: number;
-  retailRate: number;
-  wholesaleRate: number;
-  unit_name: string;
-}
-
-interface InvoiceItem {
-  productId: number;
-  unitId: number;
-  quantity: number;
-  rate: number;
-  discount: number;
-  total: number;
-  productName?: string;
-  unitName?: string;
-  product_id?: number;  // From API
-  unit_id?: number;     // From API
-  product_name?: string; // From API
-  unit_name?: string;   // From API
-  availableUnits?: UnitOption[];
-}
-
-interface Invoice {
-  id: number;
-  customerId?: number;
-  customer_id?: number;
-  invoiceDate?: string;
-  invoice_date?: string;
-  dueDate?: string;
-  due_date?: string;
-  manualDiscount?: number;
-  manual_discount?: number;
-  schemeDiscount?: number;
-  scheme_discount?: number;
-  status: 'draft' | 'created' | 'paid' | 'cancelled';
-  items?: InvoiceItem[];
-}
+import { Customer, Product, InvoiceItem, Invoice } from '../../types/invoice';
 
 const EditInvoicePage = () => {
   const navigate = useNavigate();
@@ -93,7 +26,9 @@ const EditInvoicePage = () => {
   const [dueDate, setDueDate] = useState<Date | null>(new Date());
   const [items, setItems] = useState<InvoiceItem[]>([]);
   const [manualDiscount, setManualDiscount] = useState(0);
-  const [schemeDiscount, setSchemeDiscount] = useState(0);
+  const [previousBalance, setPreviousBalance] = useState(0);
+  const [charges, setCharges] = useState(0);
+  const [paidAmount, setPaidAmount] = useState(0);
 
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -121,7 +56,9 @@ const EditInvoicePage = () => {
           setInvoiceDate(new Date(invoiceData.invoiceDate || invoiceData.invoice_date));
           setDueDate(new Date(invoiceData.dueDate || invoiceData.due_date));
           setManualDiscount(invoiceData.manualDiscount || invoiceData.manual_discount || 0);
-          setSchemeDiscount(invoiceData.schemeDiscount || invoiceData.scheme_discount || 0);
+          setPreviousBalance(invoiceData.previousBalance || invoiceData.previous_balance || 0);
+          setCharges(invoiceData.charges || 0);
+          setPaidAmount(invoiceData.paid_amount || 0);
 
           // Load items with product details
           if (invoiceData.items) {
@@ -179,7 +116,8 @@ const EditInvoicePage = () => {
       items,
       products,
       manualDiscount,
-      schemeDiscount
+      previousBalance,
+      charges
     );
 
     const formattedInvoiceDate = dayjs(invoiceDate).format('YYYY-MM-DD');
@@ -198,12 +136,14 @@ const EditInvoicePage = () => {
         subtotal,
         manualDiscount,
         manual_discount: manualDiscount,
-        schemeDiscount,
-        scheme_discount: schemeDiscount,
+        previousBalance,
+        previous_balance: previousBalance,
         totalDiscount,
         total_discount: totalDiscount,
         totalTax,
         total_tax: totalTax,
+        charges,
+        paid_amount: paidAmount,
         total,
         status: originalInvoice.status,
       });
@@ -263,9 +203,13 @@ const EditInvoicePage = () => {
             items={items}
             products={products}
             manualDiscount={manualDiscount}
-            schemeDiscount={schemeDiscount}
+            previousBalance={previousBalance}
+            charges={charges}
+            paidAmount={paidAmount}
             onManualDiscountChange={setManualDiscount}
-            onSchemeDiscountChange={setSchemeDiscount}
+            onPreviousBalanceChange={setPreviousBalance}
+            onChargesChange={setCharges}
+            onPaidAmountChange={setPaidAmount}
           />
 
           <Box sx={{ mt: 3, display: 'flex', gap: 2, justifyContent: 'flex-end' }}>

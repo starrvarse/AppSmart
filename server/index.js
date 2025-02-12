@@ -7,6 +7,7 @@ import productCompanyRoutes from './routes/productCompanyRoutes.js';
 import productRoutes from './routes/productRoutes.js';
 import customerRoutes from './routes/customerRoutes.js';
 import invoiceRoutes from './routes/invoiceRoutes.js';
+import companyRoutes from './routes/companyRoutes.js';
 import documentRoutes from './routes/documentRoutes.js';
 import { requestLogger } from './middleware/requestLogger.js';
 import { errorHandler } from './middleware/errorHandler.js';
@@ -22,8 +23,12 @@ app.use(cors({
 }));
 
 // Middleware
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(requestLogger);
+
+// Serve static files
+app.use(express.static('public'));
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -33,6 +38,7 @@ app.use('/api/product-companies', productCompanyRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/customers', customerRoutes);
 app.use('/api/invoices', invoiceRoutes);
+app.use('/api/company', companyRoutes);
 app.use('/api/documents', documentRoutes);
 
 // Error handling

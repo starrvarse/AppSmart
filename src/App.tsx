@@ -12,6 +12,7 @@ import AddInvoice from './pages/Invoice/AddInvoice';
 import EditInvoice from './pages/Invoice/EditInvoice';
 import CustomerPage from './pages/Customer/Customer';
 import AddCustomer from './pages/Customer/AddCustomer';
+import CompanyDetails from './pages/CompanyDetails/CompanyDetails';
 
 function App() {
   return (
@@ -34,6 +35,7 @@ function App() {
       <Route path="/customers" element={<CustomerPage />} />
       <Route path="/customers/add" element={<AddCustomer />} />
       <Route path="/customers/edit/:id" element={<AddCustomer />} />
+      <Route path="/company" element={<CompanyDetails />} />
 
       {/* Default route */}
       <Route path="/" element={<Navigate to="/auth/signin" replace />} />

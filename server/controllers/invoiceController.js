@@ -14,9 +14,11 @@ export const createInvoice = (req, res) => {
     items,
     subtotal,
     manualDiscount = 0,
-    schemeDiscount = 0,
+    previousBalance = 0,
     totalDiscount = 0,
     totalTax = 0,
+    charges = 0,
+    paid_amount = 0,
     total,
     status = 'draft'
   } = req.body;
@@ -27,9 +29,9 @@ export const createInvoice = (req, res) => {
       const invoiceStmt = db.prepare(`
         INSERT INTO invoices (
           invoice_number, customer_id, invoice_date, due_date,
-          subtotal, manual_discount, scheme_discount, total_discount,
-          total_tax, total, status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          subtotal, manual_discount, previous_balance, total_discount,
+          total_tax, charges, paid_amount, total, status
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
 
       const invoiceResult = invoiceStmt.run(
@@ -39,9 +41,11 @@ export const createInvoice = (req, res) => {
         dueDate,
         subtotal,
         manualDiscount,
-        schemeDiscount,
+        previousBalance, // Using scheme_discount column for previous_balance
         totalDiscount,
         totalTax,
+        charges,
+        paid_amount,
         total,
         status
       );
@@ -160,9 +164,11 @@ export const updateInvoice = (req, res) => {
     items,
     subtotal,
     manualDiscount = 0,
-    schemeDiscount = 0,
+    previousBalance = 0,
     totalDiscount = 0,
     totalTax = 0,
+    charges = 0,
+    paid_amount = 0,
     total,
     status
   } = req.body;
@@ -173,8 +179,9 @@ export const updateInvoice = (req, res) => {
       const invoiceStmt = db.prepare(`
         UPDATE invoices SET
           customer_id = ?, invoice_date = ?, due_date = ?,
-          subtotal = ?, manual_discount = ?, scheme_discount = ?,
-          total_discount = ?, total_tax = ?, total = ?, status = ?
+          subtotal = ?, manual_discount = ?, previous_balance = ?,
+          total_discount = ?, total_tax = ?, charges = ?, 
+          paid_amount = ?, total = ?, status = ?
         WHERE id = ?
       `);
 
@@ -184,9 +191,11 @@ export const updateInvoice = (req, res) => {
         dueDate,
         subtotal,
         manualDiscount,
-        schemeDiscount,
+        previousBalance, // Using scheme_discount column for previous_balance
         totalDiscount,
         totalTax,
+        charges,
+        paid_amount,
         total,
         status,
         id

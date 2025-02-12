@@ -101,9 +101,11 @@ db.exec(`
     due_date DATE NOT NULL,
     subtotal REAL NOT NULL,
     manual_discount REAL DEFAULT 0,
-    scheme_discount REAL DEFAULT 0,
+    previous_balance REAL DEFAULT 0,
     total_discount REAL DEFAULT 0,
     total_tax REAL DEFAULT 0,
+    charges REAL DEFAULT 0,
+    paid_amount REAL DEFAULT 0,
     total REAL NOT NULL,
     status TEXT CHECK(status IN ('draft', 'created', 'paid', 'cancelled')) NOT NULL DEFAULT 'draft',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -123,6 +125,17 @@ db.exec(`
     FOREIGN KEY (invoice_id) REFERENCES invoices(id),
     FOREIGN KEY (product_id) REFERENCES products(id),
     FOREIGN KEY (unit_id) REFERENCES units(id)
+  );
+
+  CREATE TABLE IF NOT EXISTS company (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    address TEXT,
+    gst TEXT,
+    phone TEXT,
+    email TEXT,
+    logo TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 `);
 

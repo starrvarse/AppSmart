@@ -13,54 +13,7 @@ import AuthLayout from '../../components/Layout/AuthLayout';
 import InvoiceFooter, { calculateTotals } from '../../components/InvoiceFooter';
 import InvoiceHeader from '../../components/InvoiceHeader';
 import InvoiceItems from '../../components/InvoiceItems';
-
-interface Customer {
-  id: number;
-  name: string;
-  phone?: string;
-  type: 'wholesale' | 'retail';
-}
-
-interface ProductUnit {
-  id: number;
-  unitId: number;
-  conversionRate: number;
-  retailRate: number;
-  wholesaleRate: number;
-  unit_name?: string;
-}
-
-interface Product {
-  id: number;
-  name: string;
-  code: string;
-  baseRate: number;
-  baseWholesaleRate: number | null;
-  taxPercentage: number;
-  baseUnitId: number;
-  base_unit_name?: string;
-  units?: ProductUnit[];
-}
-
-interface UnitOption {
-  unitId: number;
-  conversionRate: number;
-  retailRate: number;
-  wholesaleRate: number;
-  unit_name: string;
-}
-
-interface InvoiceItem {
-  productId: number;
-  unitId: number;
-  quantity: number;
-  rate: number;
-  discount: number;
-  total: number;
-  productName?: string;
-  unitName?: string;
-  availableUnits?: UnitOption[];
-}
+import { Customer, Product, InvoiceItem } from '../../types/invoice';
 
 const AddInvoicePage = () => {
   const navigate = useNavigate();
@@ -70,7 +23,9 @@ const AddInvoicePage = () => {
   const [dueDate, setDueDate] = useState<Date | null>(new Date());
   const [items, setItems] = useState<InvoiceItem[]>([]);
   const [manualDiscount, setManualDiscount] = useState(0);
-  const [schemeDiscount, setSchemeDiscount] = useState(0);
+  const [previousBalance, setPreviousBalance] = useState(0);
+  const [charges, setCharges] = useState(0);
+  const [paidAmount, setPaidAmount] = useState(0);
 
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -99,7 +54,8 @@ const AddInvoicePage = () => {
       items,
       products,
       manualDiscount,
-      schemeDiscount
+      previousBalance,
+      charges
     );
 
     const formattedInvoiceDate = dayjs(invoiceDate).format('YYYY-MM-DD');
@@ -118,12 +74,14 @@ const AddInvoicePage = () => {
         subtotal,
         manualDiscount,
         manual_discount: manualDiscount,
-        schemeDiscount,
-        scheme_discount: schemeDiscount,
+        previousBalance,
+        previous_balance: previousBalance,
         totalDiscount,
         total_discount: totalDiscount,
         totalTax,
         total_tax: totalTax,
+        charges,
+        paid_amount: paidAmount,
         total,
         status,
       });
@@ -183,9 +141,13 @@ const AddInvoicePage = () => {
             items={items}
             products={products}
             manualDiscount={manualDiscount}
-            schemeDiscount={schemeDiscount}
+            previousBalance={previousBalance}
+            charges={charges}
+            paidAmount={paidAmount}
             onManualDiscountChange={setManualDiscount}
-            onSchemeDiscountChange={setSchemeDiscount}
+            onPreviousBalanceChange={setPreviousBalance}
+            onChargesChange={setCharges}
+            onPaidAmountChange={setPaidAmount}
           />
 
           <Box sx={{ mt: 3, display: 'flex', gap: 2, justifyContent: 'flex-end' }}>

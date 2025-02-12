@@ -58,7 +58,7 @@ export function DataTable<T>({ data, columns, showSearch = true }: DataTableProp
     getFilteredRowModel: getFilteredRowModel(),
     initialState: {
       pagination: {
-        pageSize: 10,
+        pageSize: 15,
       },
     },
   });
@@ -66,7 +66,7 @@ export function DataTable<T>({ data, columns, showSearch = true }: DataTableProp
   return (
     <Box sx={{ width: '100%' }}>
       {showSearch && (
-        <Box sx={{ mb: 2 }}>
+        <Box sx={{ p: 1 }}>
           <TextField
             variant="outlined"
             size="small"
@@ -80,8 +80,8 @@ export function DataTable<T>({ data, columns, showSearch = true }: DataTableProp
           />
         </Box>
       )}
-      <TableContainer component={Paper} sx={{ mb: 2 }}>
-        <Table>
+      <TableContainer component={Paper} sx={{ mb: 1 }}>
+        <Table size="small">
           <TableHead>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
@@ -94,6 +94,10 @@ export function DataTable<T>({ data, columns, showSearch = true }: DataTableProp
                       sx={{
                         cursor: 'pointer',
                         fontWeight: 'bold',
+                        fontSize: '0.875rem',
+                        py: 1,
+                        px: 1,
+                        backgroundColor: 'grey.50',
                         '&:hover': {
                           backgroundColor: 'action.hover',
                         },
@@ -134,7 +138,17 @@ export function DataTable<T>({ data, columns, showSearch = true }: DataTableProp
                   style={{ background: 'white' }}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell 
+                      key={cell.id}
+                      sx={{ 
+                        py: 0.75,
+                        px: 1,
+                        fontSize: '0.875rem',
+                        '&:hover': {
+                          backgroundColor: 'action.hover',
+                        },
+                      }}
+                    >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
@@ -144,23 +158,23 @@ export function DataTable<T>({ data, columns, showSearch = true }: DataTableProp
           </TableBody>
         </Table>
       </TableContainer>
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 1, py: 0.5 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
           <IconButton
             onClick={() => table.setPageIndex(0)}
             disabled={!table.getCanPreviousPage()}
             size="small"
           >
-            <FirstPage />
+            <FirstPage fontSize="small" />
           </IconButton>
           <IconButton
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
             size="small"
           >
-            <NavigateBefore />
+            <NavigateBefore fontSize="small" />
           </IconButton>
-          <Typography variant="body2" sx={{ mx: 2 }}>
+          <Typography variant="body2" sx={{ mx: 1, fontSize: '0.875rem' }}>
             Page {table.getState().pagination.pageIndex + 1} of{' '}
             {table.getPageCount()}
           </Typography>
@@ -169,25 +183,32 @@ export function DataTable<T>({ data, columns, showSearch = true }: DataTableProp
             disabled={!table.getCanNextPage()}
             size="small"
           >
-            <NavigateNext />
+            <NavigateNext fontSize="small" />
           </IconButton>
           <IconButton
             onClick={() => table.setPageIndex(table.getPageCount() - 1)}
             disabled={!table.getCanNextPage()}
             size="small"
           >
-            <LastPage />
+            <LastPage fontSize="small" />
           </IconButton>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Typography variant="body2">Rows per page:</Typography>
+          <Typography variant="body2" sx={{ fontSize: '0.875rem' }}>Rows per page:</Typography>
           <Select
             value={table.getState().pagination.pageSize}
             onChange={(e) => table.setPageSize(Number(e.target.value))}
             size="small"
-            sx={{ minWidth: 80 }}
+            sx={{ 
+              minWidth: 70,
+              height: 30,
+              '.MuiSelect-select': {
+                py: 0.5,
+                fontSize: '0.875rem',
+              }
+            }}
           >
-            {[5, 10, 20, 30, 40, 50].map((pageSize) => (
+            {[10, 15, 20, 30, 50].map((pageSize) => (
               <MenuItem key={pageSize} value={pageSize}>
                 {pageSize}
               </MenuItem>
