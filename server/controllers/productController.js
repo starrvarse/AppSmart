@@ -65,6 +65,145 @@ export const createProduct = (req, res) => {
   }
 };
 
+export const importProducts = async (req, res) => {
+  const products = req.body;
+  
+  if (!Array.isArray(products)) {
+    return res.status(400).json({ error: 'Products must be an array' });
+  }
+
+  try {
+    const results = [];
+    let processedCount = 0;
+
+    // Helper function to find or create category
+    const getCategoryId = (name) => {
+      if (!name) return null;
+      const existingCategory = db.prepare('SELECT id FROM categories WHERE name = ?').get(name);
+      if (existingCategory) return existingCategory.id;
+      
+      const result = db.prepare('INSERT INTO categories (name) VALUES (?)').run(name);
+      return result.lastInsertRowid;
+    };
+
+    // Helper function to find or create unit
+    const getUnitId = (name) => {
+      if (!name) return null;
+      const existingUnit = db.prepare('SELECT id FROM units WHERE name = ?').get(name);
+      if (existingUnit) return existingUnit.id;
+      
+      const result = db.prepare('INSERT INTO units (name) VALUES (?)').run(name);
+      return result.lastInsertRowid;
+    };
+
+    // Helper function to find or create company
+    const getCompanyId = (name) => {
+      if (!name) return null;
+      const existingCompany = db.prepare('SELECT id FROM product_companies WHERE name = ?').get(name);
+      if (existingCompany) return existingCompany.id;
+      
+      const result = db.prepare('INSERT INTO product_companies (name) VALUES (?)').run(name);
+      return result.lastInsertRowid;
+    };
+
+    // Process each product
+    for (const product of products) {
+      try {
+        // Validate required fields
+        if (!product.name) throw new Error('Product name is required');
+        if (!product.code) throw new Error('Product code is required');
+        if (!product.base_unit_name) throw new Error('Base unit is required');
+        if (typeof product.base_rate !== 'number') throw new Error('Base rate must be a number');
+
+        // Get or create references
+        const categoryId = product.category_name ? getCategoryId(product.category_name) : null;
+        const baseUnitId = getUnitId(product.base_unit_name);
+        const companyId = product.company_name ? getCompanyId(product.company_name) : null;
+
+        // Insert product
+        const result = db.transaction(() => {
+          const productStmt = db.prepare(`
+            INSERT INTO products (
+              name, code, category_id, base_unit_id, base_rate,
+              base_wholesale_rate, hsn_code, company_id, tax_percentage
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `);
+          
+          const productResult = productStmt.run(
+            product.name,
+            product.code,
+            categoryId,
+            baseUnitId,
+            product.base_rate,
+            product.base_wholesale_rate || null,
+            product.hsn_code || null,
+            companyId,
+            product.tax_percentage || null
+          );
+
+          // Handle additional units if provided
+          if (product.additional_units) {
+            let units = [];
+            try {
+              units = typeof product.additional_units === 'string' 
+                ? JSON.parse(product.additional_units)
+                : product.additional_units;
+            } catch (e) {
+              console.warn('Failed to parse additional units:', e);
+            }
+
+            if (Array.isArray(units)) {
+              const unitStmt = db.prepare(`
+                INSERT INTO product_units (
+                  product_id, unit_id, conversion_rate, retail_rate, wholesale_rate
+                ) VALUES (?, ?, ?, ?, ?)
+              `);
+
+              units.forEach(unit => {
+                if (!unit.unit_name) return;
+                const unitId = getUnitId(unit.unit_name);
+                unitStmt.run(
+                  productResult.lastInsertRowid,
+                  unitId,
+                  unit.conversion_rate || 1,
+                  unit.retail_rate || 0,
+                  unit.wholesale_rate || 0
+                );
+              });
+            }
+          }
+
+          return productResult;
+        })();
+
+        results.push({
+          success: true,
+          name: product.name,
+          id: result.lastInsertRowid
+        });
+      } catch (error) {
+        console.error('Import error for product:', product.name, error);
+        results.push({
+          success: false,
+          name: product.name || 'Unknown',
+          error: error.message
+        });
+      }
+
+      processedCount++;
+      res.write(JSON.stringify({
+        progress: (processedCount / products.length) * 100,
+        currentItem: product.name || 'Unknown Product'
+      }) + '\n');
+    }
+
+    res.end(JSON.stringify({ results }));
+  } catch (error) {
+    console.error('Import products error:', error);
+    res.status(500).json({ error: error.message || 'Server error' });
+  }
+};
+
 export const getAllProducts = (req, res) => {
   try {
     const stmt = db.prepare(`

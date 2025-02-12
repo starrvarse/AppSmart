@@ -101,7 +101,9 @@ db.exec(`
     UNIQUE(year, month)
   );
 
+  DROP TABLE IF EXISTS invoice_items;
   DROP TABLE IF EXISTS invoices;
+  
   CREATE TABLE invoices (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     invoice_number TEXT NOT NULL CHECK(length(invoice_number) = 10) UNIQUE,

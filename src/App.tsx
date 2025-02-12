@@ -7,6 +7,7 @@ import CategoryPage from './pages/Category/Category';
 import ProductCompanyPage from './pages/ProductCompany/ProductCompany';
 import ProductPage from './pages/Product/Product';
 import AddProduct from './pages/Product/AddProduct';
+import ImportProduct from './pages/Product/ImportProduct';
 import InvoicePage from './pages/Invoice/Invoice';
 import AddInvoice from './pages/Invoice/AddInvoice';
 import EditInvoice from './pages/Invoice/EditInvoice';
@@ -29,6 +30,7 @@ function App() {
       <Route path="/products" element={<ProductPage />} />
       <Route path="/products/add" element={<AddProduct />} />
       <Route path="/products/edit/:id" element={<AddProduct />} />
+      <Route path="/products/import" element={<ImportProduct />} />
       <Route path="/invoices" element={<InvoicePage />} />
       <Route path="/invoices/add" element={<AddInvoice />} />
       <Route path="/invoices/edit/:id" element={<EditInvoice />} />

@@ -6,7 +6,7 @@ import DeleteDialogue from '../../components/DeleteDialogue';
 import { DataTable } from '../../components/DataTable';
 import { createColumnHelper } from '@tanstack/react-table';
 import { Box, Button, Typography } from '@mui/material';
-import { Add as AddIcon } from '@mui/icons-material';
+import { Add as AddIcon, CloudUpload as CloudUploadIcon } from '@mui/icons-material';
 
 type Product = {
   id: number;
@@ -148,14 +148,24 @@ const ProductPage = () => {
           <Typography variant="h6" component="h1" sx={{ fontWeight: 500 }}>
             Products
           </Typography>
-          <Button
-            size="small"
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => navigate('/products/add')}
-          >
-            Add Product
-          </Button>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<CloudUploadIcon />}
+              onClick={() => navigate('/products/import')}
+            >
+              Import
+            </Button>
+            <Button
+              size="small"
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => navigate('/products/add')}
+            >
+              Add Product
+            </Button>
+          </Box>
         </Box>
 
         <Box sx={{ bgcolor: 'background.paper' }}>

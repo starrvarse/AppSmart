@@ -19,7 +19,8 @@ const port = 5001;
 app.use(cors({
   origin: 'http://localhost:5173', // Update to match the Vite dev server port
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  allowedHeaders: ['Content-Type'],
+  allowedHeaders: ['Content-Type', 'Cache-Control', 'Connection'],
+  exposedHeaders: ['Content-Type', 'Transfer-Encoding', 'Cache-Control', 'Connection'],
 }));
 
 // Middleware

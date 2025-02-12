@@ -268,6 +268,54 @@ export const api = {
       return handleResponse<{ id: number }>(response);
     },
 
+    import: async (
+      data: any[], 
+      options?: { 
+        onProgress?: (progress: number, currentItem: string) => void;
+        signal?: AbortSignal;
+      }
+    ): Promise<void> => {
+      const response = await fetch(`${API_URL}/products/import`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+        signal: options?.signal,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Import failed');
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error('Stream not available');
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          // Convert the chunk to text
+          const chunk = new TextDecoder().decode(value);
+          const lines = chunk.split('\n').filter(Boolean);
+
+          // Process each line
+          for (const line of lines) {
+            try {
+              const data = JSON.parse(line);
+              if (data.progress && data.currentItem && options?.onProgress) {
+                options.onProgress(data.progress, data.currentItem);
+              }
+            } catch (e) {
+              console.warn('Failed to parse progress data:', e);
+            }
+          }
+        }
+      } finally {
+        reader.releaseLock();
+      }
+    },
+
     update: async (id: number, data: Omit<Product, 'id' | 'created_at'>): Promise<{ id: number }> => {
       const response = await fetch(`${API_URL}/products/${id}`, {
         method: 'PUT',
