@@ -82,13 +82,20 @@ interface Invoice {
   id: number;
   invoice_number: string;
   customerId: number;
+  customer_id: number;
   invoiceDate: string;
+  invoice_date: string;
   dueDate: string;
+  due_date: string;
   subtotal: number;
   manualDiscount: number;
+  manual_discount: number;
   schemeDiscount: number;
+  scheme_discount: number;
   totalDiscount: number;
+  total_discount: number;
   totalTax: number;
+  total_tax: number;
   total: number;
   status: 'draft' | 'created' | 'paid' | 'cancelled';
   created_at: string;
@@ -328,6 +335,15 @@ export const api = {
         body: JSON.stringify({ status }),
       });
       return handleResponse<{ id: number; status: Invoice['status'] }>(response);
+    },
+
+    update: async (id: number, data: Omit<Invoice, 'id' | 'created_at' | 'invoice_number'>): Promise<{ id: number }> => {
+      const response = await fetch(`${API_URL}/invoices/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      return handleResponse<{ id: number }>(response);
     },
 
     delete: async (id: number): Promise<void> => {

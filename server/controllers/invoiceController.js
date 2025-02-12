@@ -151,6 +151,80 @@ export const updateInvoiceStatus = (req, res) => {
   }
 };
 
+export const updateInvoice = (req, res) => {
+  const { id } = req.params;
+  const {
+    customerId,
+    invoiceDate,
+    dueDate,
+    items,
+    subtotal,
+    manualDiscount = 0,
+    schemeDiscount = 0,
+    totalDiscount = 0,
+    totalTax = 0,
+    total,
+    status
+  } = req.body;
+
+  try {
+    const result = db.transaction(() => {
+      // Update invoice
+      const invoiceStmt = db.prepare(`
+        UPDATE invoices SET
+          customer_id = ?, invoice_date = ?, due_date = ?,
+          subtotal = ?, manual_discount = ?, scheme_discount = ?,
+          total_discount = ?, total_tax = ?, total = ?, status = ?
+        WHERE id = ?
+      `);
+
+      invoiceStmt.run(
+        customerId,
+        invoiceDate,
+        dueDate,
+        subtotal,
+        manualDiscount,
+        schemeDiscount,
+        totalDiscount,
+        totalTax,
+        total,
+        status,
+        id
+      );
+
+      // Delete existing items
+      const deleteItemsStmt = db.prepare('DELETE FROM invoice_items WHERE invoice_id = ?');
+      deleteItemsStmt.run(id);
+
+      // Insert new items
+      const itemStmt = db.prepare(`
+        INSERT INTO invoice_items (
+          invoice_id, product_id, unit_id, quantity, rate, discount, total
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+      `);
+
+      items.forEach(item => {
+        itemStmt.run(
+          id,
+          item.productId,
+          item.unitId,
+          item.quantity,
+          item.rate,
+          item.discount || 0,
+          item.total
+        );
+      });
+
+      return { id: parseInt(id) };
+    })();
+
+    res.json(result);
+  } catch (error) {
+    console.error('Update invoice error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
 export const deleteInvoice = (req, res) => {
   const { id } = req.params;
   try {

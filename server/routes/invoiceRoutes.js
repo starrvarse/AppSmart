@@ -3,6 +3,7 @@ import {
   createInvoice,
   getAllInvoices,
   getInvoiceById,
+  updateInvoice,
   updateInvoiceStatus,
   deleteInvoice,
 } from '../controllers/invoiceController.js';
@@ -13,6 +14,7 @@ router.post('/', createInvoice);
 router.get('/', getAllInvoices);
 router.get('/:id', getInvoiceById);
 router.patch('/:id/status', updateInvoiceStatus);
+router.put('/:id', updateInvoice);
 router.delete('/:id', deleteInvoice);
 
 export default router;

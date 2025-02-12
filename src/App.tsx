@@ -9,6 +9,7 @@ import ProductPage from './pages/Product/Product';
 import AddProduct from './pages/Product/AddProduct';
 import InvoicePage from './pages/Invoice/Invoice';
 import AddInvoice from './pages/Invoice/AddInvoice';
+import EditInvoice from './pages/Invoice/EditInvoice';
 import CustomerPage from './pages/Customer/Customer';
 import AddCustomer from './pages/Customer/AddCustomer';
 
@@ -29,7 +30,7 @@ function App() {
       <Route path="/products/edit/:id" element={<AddProduct />} />
       <Route path="/invoices" element={<InvoicePage />} />
       <Route path="/invoices/add" element={<AddInvoice />} />
-      <Route path="/invoices/edit/:id" element={<AddInvoice />} />
+      <Route path="/invoices/edit/:id" element={<EditInvoice />} />
       <Route path="/customers" element={<CustomerPage />} />
       <Route path="/customers/add" element={<AddCustomer />} />
       <Route path="/customers/edit/:id" element={<AddCustomer />} />
