@@ -1,9 +1,41 @@
 import db from '../config/database.js';
 
 const generateInvoiceNumber = () => {
-  const timestamp = Date.now().toString();
-  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-  return timestamp + random;
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = today.getMonth() + 1;
+  const yearShort = year.toString().slice(-2);
+  const monthPadded = month.toString().padStart(2, '0');
+
+  // Get or create counter in a transaction to ensure atomicity
+  const result = db.transaction(() => {
+    // Try to get existing counter
+    const getCounter = db.prepare(
+      'SELECT counter FROM invoice_counter WHERE year = ? AND month = ?'
+    );
+    let counter = getCounter.get(year, month);
+
+    if (!counter) {
+      // Create new counter if not exists
+      const insertCounter = db.prepare(
+        'INSERT INTO invoice_counter (year, month, counter) VALUES (?, ?, 1)'
+      );
+      insertCounter.run(year, month);
+      counter = { counter: 1 };
+    } else {
+      // Increment existing counter
+      const updateCounter = db.prepare(
+        'UPDATE invoice_counter SET counter = counter + 1 WHERE year = ? AND month = ? RETURNING counter'
+      );
+      counter = updateCounter.get(year, month);
+    }
+
+    return counter.counter;
+  })();
+
+  // Format: YYMMXXXXXX where XXXXXX is the padded counter
+  const counterPadded = result.toString().padStart(6, '0');
+  return `${yearShort}${monthPadded}${counterPadded}`;
 };
 
 export const createInvoice = (req, res) => {
@@ -41,7 +73,7 @@ export const createInvoice = (req, res) => {
         dueDate,
         subtotal,
         manualDiscount,
-        previousBalance, // Using scheme_discount column for previous_balance
+        previousBalance,
         totalDiscount,
         totalTax,
         charges,
@@ -191,7 +223,7 @@ export const updateInvoice = (req, res) => {
         dueDate,
         subtotal,
         manualDiscount,
-        previousBalance, // Using scheme_discount column for previous_balance
+        previousBalance,
         totalDiscount,
         totalTax,
         charges,

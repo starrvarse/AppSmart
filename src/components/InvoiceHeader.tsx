@@ -74,16 +74,28 @@ const InvoiceHeader = ({
   };
 
   return (
-    <Grid container spacing={2}>
+    <Grid container spacing={1} sx={{ mb: 1 }}>
       <Grid item xs={12} md={4}>
         <Autocomplete
+          size="small"
           options={customers}
           value={selectedCustomer}
           getOptionLabel={(option) => `${option.name} (${option.type})`}
           renderInput={(params) => (
-            <TextField {...params} label="Customer" required />
+            <TextField 
+              {...params} 
+              label="Customer" 
+              required 
+              size="small"
+              InputLabelProps={{ 
+                sx: { fontSize: '0.875rem' } 
+              }}
+            />
           )}
           onChange={(_, value) => handleCustomerChange(value)}
+          ListboxProps={{
+            style: { fontSize: '0.875rem' }
+          }}
         />
       </Grid>
       <Grid item xs={12} md={4}>
@@ -91,7 +103,16 @@ const InvoiceHeader = ({
           label="Invoice Date"
           value={dayjs(invoiceDate)}
           onChange={(value) => onInvoiceDateChange(value?.toDate() || null)}
-          slotProps={{ textField: { fullWidth: true, required: true } }}
+          slotProps={{ 
+            textField: { 
+              fullWidth: true, 
+              required: true,
+              size: "small",
+              InputLabelProps: { 
+                sx: { fontSize: '0.875rem' } 
+              }
+            } 
+          }}
         />
       </Grid>
       <Grid item xs={12} md={4}>
@@ -99,7 +120,16 @@ const InvoiceHeader = ({
           label="Due Date"
           value={dayjs(dueDate)}
           onChange={(value) => onDueDateChange(value?.toDate() || null)}
-          slotProps={{ textField: { fullWidth: true, required: true } }}
+          slotProps={{ 
+            textField: { 
+              fullWidth: true, 
+              required: true,
+              size: "small",
+              InputLabelProps: { 
+                sx: { fontSize: '0.875rem' } 
+              }
+            } 
+          }}
         />
       </Grid>
     </Grid>

@@ -1,5 +1,5 @@
 import { Box, Button, IconButton, TextField, Typography, Autocomplete, Grid, Paper } from '@mui/material';
-import { Delete as DeleteIcon } from '@mui/icons-material';
+import { Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
 import { calculateItemTotal } from './InvoiceFooter';
 import { api } from '../services/api';
 
@@ -41,10 +41,10 @@ interface InvoiceItem {
   total: number;
   productName?: string;
   unitName?: string;
-  product_id?: number;  // From API
-  unit_id?: number;     // From API
-  product_name?: string; // From API
-  unit_name?: string;   // From API
+  product_id?: number;
+  unit_id?: number;
+  product_name?: string;
+  unit_name?: string;
   availableUnits?: UnitOption[];
 }
 
@@ -89,7 +89,6 @@ const InvoiceItems = ({
       item.productName = product.name;
       item.unitId = product.baseUnitId;
       item.unitName = product.base_unit_name || '';
-      // Use wholesale rate if customer is wholesale type
       item.rate = selectedCustomerType === 'wholesale' && product.baseWholesaleRate !== null
         ? product.baseWholesaleRate
         : product.baseRate;
@@ -111,7 +110,6 @@ const InvoiceItems = ({
         })) || []),
       ];
 
-      // Recalculate total
       item.total = calculateItemTotal(item.quantity, item.rate, item.discount);
 
       newItems[index] = item;
@@ -125,11 +123,9 @@ const InvoiceItems = ({
     const newItems = [...items];
     const item = { ...newItems[index], [field]: value };
 
-    // If unit changes, update the rate based on the product's unit rates
     if (field === 'unitId') {
       const selectedUnit = item.availableUnits?.find(u => u.unitId === value);
       if (selectedUnit) {
-        // Use wholesale rate if customer is wholesale type
         item.rate = selectedCustomerType === 'wholesale'
           ? selectedUnit.wholesaleRate
           : selectedUnit.retailRate;
@@ -137,7 +133,6 @@ const InvoiceItems = ({
       }
     }
 
-    // Recalculate total when quantity, rate, or discount changes
     if (field === 'quantity' || field === 'rate' || field === 'discount') {
       item.total = calculateItemTotal(
         field === 'quantity' ? value : item.quantity,
@@ -151,85 +146,146 @@ const InvoiceItems = ({
   };
 
   return (
-    <Paper sx={{ mt: 3, p: 2 }}>
-      <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h6">Products</Typography>
-        <Button variant="contained" onClick={handleAddItem}>
-          Add Product
+    <Paper sx={{ mt: 1, p: 1 }}>
+      <Box sx={{ mb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>Products</Typography>
+        <Button 
+          size="small" 
+          variant="contained" 
+          onClick={handleAddItem}
+          startIcon={<AddIcon />}
+        >
+          Add
         </Button>
       </Box>
 
       {items.map((item, index) => (
-        <Grid container key={index} spacing={2} sx={{ mb: 2 }}>
-          <Grid item xs={12} md={3}>
+        <Grid container key={index} spacing={1} sx={{ mb: 1 }}>
+          <Grid item xs={12} md={3.5}>
             <Autocomplete
+              size="small"
               options={products}
               value={products.find(p => p.id === item.productId) || null}
               getOptionLabel={(option) => `${option.name} (${option.code})`}
               renderInput={(params) => (
-                <TextField {...params} label="Product" required />
+                <TextField 
+                  {...params} 
+                  label="Product" 
+                  required 
+                  size="small"
+                  InputLabelProps={{ 
+                    sx: { fontSize: '0.875rem' } 
+                  }}
+                />
               )}
               onChange={(_, value) => {
                 if (value) {
                   handleProductSelect(index, value.id);
                 }
               }}
+              ListboxProps={{
+                style: { fontSize: '0.875rem' }
+              }}
             />
           </Grid>
           <Grid item xs={12} md={2}>
             <Autocomplete
-                    options={item.availableUnits?.filter((u): u is NonNullable<typeof u> => u !== null) || []}
-                    getOptionLabel={(option) => option.unit_name || ''}
-                    value={item.availableUnits?.find(u => u && u.unitId === item.unitId) || null}
+              size="small"
+              options={item.availableUnits?.filter((u): u is NonNullable<typeof u> => u !== null) || []}
+              getOptionLabel={(option) => option.unit_name || ''}
+              value={item.availableUnits?.find(u => u && u.unitId === item.unitId) || null}
               renderInput={(params) => (
-                <TextField {...params} label="Unit" required />
+                <TextField 
+                  {...params} 
+                  label="Unit" 
+                  required 
+                  size="small"
+                  InputLabelProps={{ 
+                    sx: { fontSize: '0.875rem' } 
+                  }}
+                />
               )}
               onChange={(_, value) => {
                 handleItemChange(index, 'unitId', value?.unitId || 0);
+              }}
+              ListboxProps={{
+                style: { fontSize: '0.875rem' }
+              }}
+            />
+          </Grid>
+          <Grid item xs={12} md={1.5}>
+            <TextField
+              size="small"
+              label="Quantity"
+              type="number"
+              fullWidth
+              required
+              value={item.quantity || 0}
+              onChange={(e) => handleItemChange(index, 'quantity', parseFloat(e.target.value) || 0)}
+              InputLabelProps={{ 
+                sx: { fontSize: '0.875rem' } 
+              }}
+              inputProps={{
+                style: { fontSize: '0.875rem' }
+              }}
+            />
+          </Grid>
+          <Grid item xs={12} md={1.5}>
+            <TextField
+              size="small"
+              label="Rate"
+              type="number"
+              fullWidth
+              required
+              value={item.rate || 0}
+              onChange={(e) => handleItemChange(index, 'rate', parseFloat(e.target.value) || 0)}
+              InputLabelProps={{ 
+                sx: { fontSize: '0.875rem' } 
+              }}
+              inputProps={{
+                style: { fontSize: '0.875rem' }
               }}
             />
           </Grid>
           <Grid item xs={12} md={1}>
             <TextField
-              label="Quantity"
+              size="small"
+              label="Disc %"
               type="number"
               fullWidth
-              required
-                    value={item.quantity || 0}
-              onChange={(e) => handleItemChange(index, 'quantity', parseFloat(e.target.value) || 0)}
-            />
-          </Grid>
-          <Grid item xs={12} md={2}>
-            <TextField
-              label="Rate"
-              type="number"
-              fullWidth
-              required
-                    value={item.rate || 0}
-              onChange={(e) => handleItemChange(index, 'rate', parseFloat(e.target.value) || 0)}
-            />
-          </Grid>
-          <Grid item xs={12} md={1}>
-            <TextField
-              label="Discount %"
-              type="number"
-              fullWidth
-                    value={item.discount || 0}
+              value={item.discount || 0}
               onChange={(e) => handleItemChange(index, 'discount', parseFloat(e.target.value) || 0)}
+              InputLabelProps={{ 
+                sx: { fontSize: '0.875rem' } 
+              }}
+              inputProps={{
+                style: { fontSize: '0.875rem' }
+              }}
             />
           </Grid>
-          <Grid item xs={12} md={2}>
+          <Grid item xs={12} md={1.5}>
             <TextField
+              size="small"
               label="Total"
               type="number"
               fullWidth
               disabled
-                    value={(item.total || 0).toFixed(2)}
+              value={(item.total || 0).toFixed(2)}
+              InputLabelProps={{ 
+                sx: { fontSize: '0.875rem' } 
+              }}
+              inputProps={{
+                style: { fontSize: '0.875rem' }
+              }}
             />
           </Grid>
-          <Grid item xs={12} md={1}>
-            <IconButton color="error" onClick={() => handleRemoveItem(index)}>
-              <DeleteIcon />
+          <Grid item xs={12} md={1} sx={{ display: 'flex', alignItems: 'center' }}>
+            <IconButton 
+              size="small" 
+              color="error" 
+              onClick={() => handleRemoveItem(index)}
+            >
+              <DeleteIcon fontSize="small" />
             </IconButton>
           </Grid>
         </Grid>

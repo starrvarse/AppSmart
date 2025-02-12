@@ -93,9 +93,18 @@ db.exec(`
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
-  CREATE TABLE IF NOT EXISTS invoices (
+  CREATE TABLE IF NOT EXISTS invoice_counter (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    invoice_number TEXT UNIQUE NOT NULL,
+    year INTEGER NOT NULL,
+    month INTEGER NOT NULL,
+    counter INTEGER NOT NULL DEFAULT 1,
+    UNIQUE(year, month)
+  );
+
+  DROP TABLE IF EXISTS invoices;
+  CREATE TABLE invoices (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    invoice_number TEXT NOT NULL CHECK(length(invoice_number) = 10) UNIQUE,
     customer_id INTEGER NOT NULL,
     invoice_date DATE NOT NULL,
     due_date DATE NOT NULL,

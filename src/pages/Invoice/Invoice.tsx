@@ -1,7 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Button, Typography, Chip, Dialog } from '@mui/material';
-import { Add as AddIcon, Print as PrintIcon } from '@mui/icons-material';
+import { Box, Button, Typography, Chip, Dialog, IconButton } from '@mui/material';
+import { 
+  Add as AddIcon, 
+  Print as PrintIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+} from '@mui/icons-material';
 import { api } from '../../services/api';
 import AuthLayout from '../../components/Layout/AuthLayout';
 import { DataTable } from '../../components/DataTable';
@@ -29,7 +34,6 @@ const InvoicePage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [isDeleteDialogueOpen, setIsDeleteDialogueOpen] = useState(false);
-  const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
 
   const loadInvoices = async () => {
     try {
@@ -200,33 +204,38 @@ const InvoicePage = () => {
       id: 'actions',
       header: 'Actions',
       cell: (info) => (
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button
+        <Box sx={{ display: 'flex', gap: 0.5 }}>
+          <IconButton
             size="small"
-            variant="outlined"
             onClick={() => handleEdit(info.row.original)}
+            sx={{ 
+              color: 'primary.main',
+              '&:hover': { bgcolor: 'primary.lighter' }
+            }}
           >
-            Edit
-          </Button>
-          <Button
+            <EditIcon fontSize="small" />
+          </IconButton>
+          <IconButton
             size="small"
-            variant="outlined"
             onClick={() => handlePrint(info.row.original)}
-            startIcon={<PrintIcon />}
+            sx={{ 
+              color: 'primary.main',
+              '&:hover': { bgcolor: 'primary.lighter' }
+            }}
           >
-            Print
-          </Button>
-          <Button
+            <PrintIcon fontSize="small" />
+          </IconButton>
+          <IconButton
             size="small"
-            variant="outlined"
             color="error"
             onClick={() => {
               setSelectedInvoice(info.row.original);
               setIsDeleteDialogueOpen(true);
             }}
+            sx={{ '&:hover': { bgcolor: 'error.lighter' } }}
           >
-            Delete
-          </Button>
+            <DeleteIcon fontSize="small" />
+          </IconButton>
         </Box>
       ),
     }),
