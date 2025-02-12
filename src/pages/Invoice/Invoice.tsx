@@ -13,8 +13,10 @@ type Invoice = {
   invoice_number: string;
   customer_name?: string;
   customer_phone?: string;
-  invoiceDate: string;
-  dueDate: string;
+  invoiceDate?: string;
+  invoice_date?: string;
+  dueDate?: string;
+  due_date?: string;
   total: number;
   status: 'draft' | 'created' | 'paid' | 'cancelled';
 };
@@ -58,6 +60,15 @@ const InvoicePage = () => {
     navigate(`/invoices/edit/${invoice.id}`);
   };
 
+  const formatDate = (date: string | undefined) => {
+    if (!date) return '-';
+    try {
+      return new Date(date).toLocaleDateString();
+    } catch (error) {
+      return '-';
+    }
+  };
+
   const columnHelper = createColumnHelper<Invoice>();
 
   const columns = [
@@ -73,13 +84,15 @@ const InvoicePage = () => {
       header: 'Phone',
       cell: (info) => info.getValue() || '-',
     }),
-    columnHelper.accessor('invoiceDate', {
+    columnHelper.accessor((row) => row.invoiceDate || row.invoice_date, {
+      id: 'invoice_date',
       header: 'Invoice Date',
-      cell: (info) => new Date(info.getValue()).toLocaleDateString(),
+      cell: (info) => formatDate(info.getValue()),
     }),
-    columnHelper.accessor('dueDate', {
+    columnHelper.accessor((row) => row.dueDate || row.due_date, {
+      id: 'due_date',
       header: 'Due Date',
-      cell: (info) => new Date(info.getValue()).toLocaleDateString(),
+      cell: (info) => formatDate(info.getValue()),
     }),
     columnHelper.accessor('total', {
       header: 'Total',
