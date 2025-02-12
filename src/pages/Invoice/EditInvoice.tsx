@@ -4,17 +4,15 @@ import {
   Box,
   Button,
   IconButton,
-  TextField,
   Typography,
-  Autocomplete,
-  Grid,
-  Paper,
 } from '@mui/material';
-import { Delete as DeleteIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
 import dayjs from 'dayjs';
 import { api } from '../../services/api';
 import AuthLayout from '../../components/Layout/AuthLayout';
+import InvoiceFooter, { calculateItemTotal, calculateTotals } from '../../components/InvoiceFooter';
+import InvoiceHeader from '../../components/InvoiceHeader';
+import InvoiceItems from '../../components/InvoiceItems';
 
 interface Customer {
   id: number;
@@ -44,6 +42,14 @@ interface Product {
   units?: ProductUnit[];
 }
 
+interface UnitOption {
+  unitId: number;
+  conversionRate: number;
+  retailRate: number;
+  wholesaleRate: number;
+  unit_name: string;
+}
+
 interface InvoiceItem {
   productId: number;
   unitId: number;
@@ -57,24 +63,29 @@ interface InvoiceItem {
   unit_id?: number;     // From API
   product_name?: string; // From API
   unit_name?: string;   // From API
-  availableUnits?: Array<{
-    unitId: number;
-    conversionRate: number;
-    retailRate: number;
-    wholesaleRate: number;
-    unit_name: string;
-  } | null>;
+  availableUnits?: UnitOption[];
 }
 
-const calculateItemTotal = (quantity: number, rate: number, discount: number) => {
-  const subtotal = (quantity || 0) * (rate || 0);
-  return subtotal * (1 - (discount || 0) / 100);
-};
+interface Invoice {
+  id: number;
+  customerId?: number;
+  customer_id?: number;
+  invoiceDate?: string;
+  invoice_date?: string;
+  dueDate?: string;
+  due_date?: string;
+  manualDiscount?: number;
+  manual_discount?: number;
+  schemeDiscount?: number;
+  scheme_discount?: number;
+  status: 'draft' | 'created' | 'paid' | 'cancelled';
+  items?: InvoiceItem[];
+}
 
 const EditInvoicePage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const [originalInvoice, setOriginalInvoice] = useState<any | null>(null);
+  const [originalInvoice, setOriginalInvoice] = useState<Invoice | null>(null);
 
   const [customerId, setCustomerId] = useState<number | null>(null);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
@@ -161,129 +172,21 @@ const EditInvoicePage = () => {
     loadData();
   }, [id]);
 
-  const handleAddItem = () => {
-    setItems([
-      ...items,
-      {
-        productId: 0,
-        unitId: 0,
-        quantity: 1,
-        rate: 0,
-        discount: 0,
-        total: 0,
-      },
-    ]);
-  };
-
-  const handleRemoveItem = (index: number) => {
-    setItems(items.filter((_, i) => i !== index));
-  };
-
-  const handleProductSelect = async (index: number, productId: number) => {
-    try {
-      const product = await api.products.getById(productId);
-      const newItems = [...items];
-      const item = { ...newItems[index] };
-
-      item.productId = product.id;
-      item.productName = product.name;
-      item.unitId = product.baseUnitId;
-      item.unitName = product.base_unit_name || '';
-      // Use wholesale rate if customer is wholesale type
-      item.rate = selectedCustomer?.type === 'wholesale' && product.baseWholesaleRate !== null
-        ? product.baseWholesaleRate
-        : product.baseRate;
-
-      item.availableUnits = [
-        {
-          unitId: product.baseUnitId,
-          conversionRate: 1,
-          retailRate: product.baseRate,
-          wholesaleRate: product.baseWholesaleRate || product.baseRate,
-          unit_name: product.base_unit_name || '',
-        },
-        ...(product.units?.map(unit => ({
-          unitId: unit.unitId,
-          conversionRate: unit.conversionRate,
-          retailRate: unit.retailRate,
-          wholesaleRate: unit.wholesaleRate,
-          unit_name: unit.unit_name || '',
-        })) || []),
-      ];
-
-      // Recalculate total
-      item.total = calculateItemTotal(item.quantity, item.rate, item.discount);
-
-      newItems[index] = item;
-      setItems(newItems);
-    } catch (error) {
-      console.error('Error loading product details:', error);
-    }
-  };
-
-  const handleItemChange = (index: number, field: keyof InvoiceItem, value: any) => {
-    const newItems = [...items];
-    const item = { ...newItems[index], [field]: value };
-
-    // If unit changes, update the rate based on the product's unit rates
-    if (field === 'unitId') {
-      const selectedUnit = item.availableUnits?.find(u => u && u.unitId === value);
-      if (selectedUnit && selectedUnit !== null) {
-        // Use wholesale rate if customer is wholesale type
-        item.rate = selectedCustomer?.type === 'wholesale'
-          ? selectedUnit.wholesaleRate
-          : selectedUnit.retailRate;
-        item.unitName = selectedUnit.unit_name || '';
-      }
-    }
-
-    // Recalculate total when quantity, rate, or discount changes
-    if (field === 'quantity' || field === 'rate' || field === 'discount') {
-      item.total = calculateItemTotal(
-        field === 'quantity' ? value : item.quantity,
-        field === 'rate' ? value : item.rate,
-        field === 'discount' ? value : item.discount
-      );
-    }
-
-    newItems[index] = item;
-    setItems(newItems);
-  };
-
-  const calculateTotals = () => {
-    const subtotal = items.reduce((sum, item) => {
-      const itemTotal = calculateItemTotal(item.quantity, item.rate, item.discount);
-      return sum + itemTotal;
-    }, 0);
-
-    const totalDiscount = (manualDiscount || 0) + (schemeDiscount || 0);
-
-    const totalTax = items.reduce((sum, item) => {
-      const product = products.find(p => p.id === item.productId);
-      const itemTotal = calculateItemTotal(item.quantity, item.rate, item.discount);
-      return sum + (itemTotal * (product?.taxPercentage || 0) / 100);
-    }, 0);
-
-    const total = subtotal - totalDiscount + totalTax;
-
-    return {
-      subtotal: Number(subtotal.toFixed(2)),
-      totalDiscount: Number(totalDiscount.toFixed(2)),
-      totalTax: Number(totalTax.toFixed(2)),
-      total: Number(total.toFixed(2))
-    };
-  };
-
   const handleSave = async () => {
     if (!customerId || !invoiceDate || !dueDate || !id || !originalInvoice) return;
 
-    const { subtotal, totalDiscount, totalTax, total } = calculateTotals();
+    const { subtotal, totalDiscount, totalTax, total } = calculateTotals(
+      items,
+      products,
+      manualDiscount,
+      schemeDiscount
+    );
+
+    const formattedInvoiceDate = dayjs(invoiceDate).format('YYYY-MM-DD');
+    const formattedDueDate = dayjs(dueDate).format('YYYY-MM-DD');
 
     try {
       setLoading(true);
-      const formattedInvoiceDate = dayjs(invoiceDate).format('YYYY-MM-DD');
-      const formattedDueDate = dayjs(dueDate).format('YYYY-MM-DD');
-
       await api.invoices.update(parseInt(id), {
         customerId,
         customer_id: customerId,
@@ -334,170 +237,36 @@ const EditInvoicePage = () => {
         </Box>
 
         <Box sx={{ p: 2 }}>
-          <Grid container spacing={2}>
-            <Grid item xs={12} md={4}>
-              <Autocomplete
-                options={customers}
-                value={selectedCustomer}
-                getOptionLabel={(option) => `${option.name} (${option.type})`}
-                renderInput={(params) => (
-                  <TextField {...params} label="Customer" required />
-                )}
-                onChange={(_, value) => {
-                  setCustomerId(value?.id || null);
-                  setSelectedCustomer(value);
-                  // Update rates for all items based on customer type
-                  if (value) {
-                    const newItems = items.map(item => {
-                      const newItem = { ...item };
-                      if (item.availableUnits && item.unitId) {
-                        const selectedUnit = item.availableUnits.find(u => u && u.unitId === item.unitId);
-                        if (selectedUnit) {
-                          newItem.rate = value.type === 'wholesale'
-                            ? selectedUnit.wholesaleRate
-                            : selectedUnit.retailRate;
-                          newItem.total = calculateItemTotal(newItem.quantity, newItem.rate, newItem.discount);
-                        }
-                      }
-                      return newItem;
-                    });
-                    setItems(newItems);
-                  }
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <DatePicker
-                label="Invoice Date"
-                value={dayjs(invoiceDate)}
-                onChange={(value) => setInvoiceDate(value?.toDate() || null)}
-                slotProps={{ textField: { fullWidth: true, required: true } }}
-              />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <DatePicker
-                label="Due Date"
-                value={dayjs(dueDate)}
-                onChange={(value) => setDueDate(value?.toDate() || null)}
-                slotProps={{ textField: { fullWidth: true, required: true } }}
-              />
-            </Grid>
-          </Grid>
+          <InvoiceHeader
+            customers={customers}
+            selectedCustomer={selectedCustomer}
+            invoiceDate={invoiceDate}
+            dueDate={dueDate}
+            onCustomerChange={(customer) => {
+              setCustomerId(customer?.id || null);
+              setSelectedCustomer(customer);
+            }}
+            onInvoiceDateChange={setInvoiceDate}
+            onDueDateChange={setDueDate}
+            items={items}
+            onItemsChange={setItems}
+          />
 
-          <Paper sx={{ mt: 3, p: 2 }}>
-            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Typography variant="h6">Products</Typography>
-              <Button variant="contained" onClick={handleAddItem}>
-                Add Product
-              </Button>
-            </Box>
+          <InvoiceItems
+            items={items}
+            products={products}
+            selectedCustomerType={selectedCustomer?.type}
+            onItemsChange={setItems}
+          />
 
-            {items.map((item, index) => (
-              <Grid container key={index} spacing={2} sx={{ mb: 2 }}>
-                <Grid item xs={12} md={3}>
-                  <Autocomplete
-                    options={products}
-                    value={products.find(p => p.id === item.productId) || null}
-                    getOptionLabel={(option) => `${option.name} (${option.code})`}
-                    renderInput={(params) => (
-                      <TextField {...params} label="Product" required />
-                    )}
-                    onChange={(_, value) => {
-                      if (value) {
-                        handleProductSelect(index, value.id);
-                      }
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} md={2}>
-                  <Autocomplete
-                    options={item.availableUnits?.filter((u): u is NonNullable<typeof u> => u !== null) || []}
-                    getOptionLabel={(option) => option.unit_name || ''}
-                    value={item.availableUnits?.find(u => u && u.unitId === item.unitId) || null}
-                    renderInput={(params) => (
-                      <TextField {...params} label="Unit" required />
-                    )}
-                    onChange={(_, value) => {
-                      handleItemChange(index, 'unitId', value?.unitId || 0);
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} md={1}>
-                  <TextField
-                    label="Quantity"
-                    type="number"
-                    fullWidth
-                    required
-                    value={item.quantity || 0}
-                    onChange={(e) => handleItemChange(index, 'quantity', parseFloat(e.target.value) || 0)}
-                  />
-                </Grid>
-                <Grid item xs={12} md={2}>
-                  <TextField
-                    label="Rate"
-                    type="number"
-                    fullWidth
-                    required
-                    value={item.rate || 0}
-                    onChange={(e) => handleItemChange(index, 'rate', parseFloat(e.target.value) || 0)}
-                  />
-                </Grid>
-                <Grid item xs={12} md={1}>
-                  <TextField
-                    label="Discount %"
-                    type="number"
-                    fullWidth
-                    value={item.discount || 0}
-                    onChange={(e) => handleItemChange(index, 'discount', parseFloat(e.target.value) || 0)}
-                  />
-                </Grid>
-                <Grid item xs={12} md={2}>
-                  <TextField
-                    label="Total"
-                    type="number"
-                    fullWidth
-                    disabled
-                    value={(item.total || 0).toFixed(2)}
-                  />
-                </Grid>
-                <Grid item xs={12} md={1}>
-                  <IconButton color="error" onClick={() => handleRemoveItem(index)}>
-                    <DeleteIcon />
-                  </IconButton>
-                </Grid>
-              </Grid>
-            ))}
-          </Paper>
-
-          <Paper sx={{ mt: 3, p: 2 }}>
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={4}>
-                <TextField
-                  label="Manual Discount"
-                  type="number"
-                  fullWidth
-                  value={manualDiscount || 0}
-                  onChange={(e) => setManualDiscount(parseFloat(e.target.value) || 0)}
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <TextField
-                  label="Scheme Discount"
-                  type="number"
-                  fullWidth
-                  value={schemeDiscount || 0}
-                  onChange={(e) => setSchemeDiscount(parseFloat(e.target.value) || 0)}
-                />
-              </Grid>
-            </Grid>
-
-            <Box sx={{ mt: 2, textAlign: 'right' }}>
-              <Typography>Subtotal: ₹{calculateTotals().subtotal.toFixed(2)}</Typography>
-              <Typography>Total Discount: ₹{calculateTotals().totalDiscount.toFixed(2)}</Typography>
-              <Typography>Total Tax: ₹{calculateTotals().totalTax.toFixed(2)}</Typography>
-              <Typography variant="h6">Total: ₹{calculateTotals().total.toFixed(2)}</Typography>
-            </Box>
-          </Paper>
+          <InvoiceFooter
+            items={items}
+            products={products}
+            manualDiscount={manualDiscount}
+            schemeDiscount={schemeDiscount}
+            onManualDiscountChange={setManualDiscount}
+            onSchemeDiscountChange={setSchemeDiscount}
+          />
 
           <Box sx={{ mt: 3, display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
             <Button
