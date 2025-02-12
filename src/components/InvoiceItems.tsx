@@ -2,6 +2,7 @@ import { Box, Button, IconButton, TextField, Typography, Autocomplete, Grid, Pap
 import { Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
 import { calculateItemTotal } from './InvoiceFooter';
 import { api } from '../services/api';
+import { KeyboardEvent } from 'react';
 
 interface ProductUnit {
   id: number;
@@ -145,6 +146,54 @@ const InvoiceItems = ({
     onItemsChange(newItems);
   };
 
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>, index: number) => {
+    if (event.key === 'Tab' && !event.shiftKey) {
+      const target = event.target as HTMLElement;
+      const currentRow = items[index];
+      
+      // Check if we're in the product Autocomplete input
+      const isProductInput = target.tagName === 'INPUT' && 
+                           target.closest('.MuiAutocomplete-root') !== null;
+      
+      // If in product input and no product selected, remove row and move to footer
+      if (isProductInput && !currentRow.productId) {
+        event.preventDefault();
+        // Remove the row
+        const newItems = items.filter((_, i) => i !== index);
+        onItemsChange(newItems);
+        
+        // Focus the manual discount input in the footer
+        setTimeout(() => {
+          const manualDiscountInput = document.querySelector('input[aria-label="Manual Discount"]');
+          if (manualDiscountInput instanceof HTMLElement) {
+            manualDiscountInput.focus();
+          }
+        }, 0);
+        return;
+      }
+
+      // Handle last row tab behavior
+      const isLastRow = index === items.length - 1;
+      const isLastField = 
+        target.getAttribute('aria-label')?.includes('Total') || 
+        target.classList.contains('MuiIconButton-root') || 
+        (target.tagName === 'INPUT' && target.getAttribute('type') === 'number' && 
+         target.closest('.MuiGrid-item')?.getAttribute('class')?.includes('md-1.5'));
+      
+      if (isLastRow && isLastField && currentRow.productId) {
+        event.preventDefault();
+        handleAddItem();
+        setTimeout(() => {
+          const productInputs = document.querySelectorAll('[aria-label="Product"]');
+          const lastInput = productInputs[productInputs.length - 1];
+          if (lastInput instanceof HTMLElement) {
+            lastInput.focus();
+          }
+        }, 0);
+      }
+    }
+  };
+
   return (
     <Paper sx={{ mt: 1, p: 1 }}>
       <Box sx={{ mb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -160,7 +209,13 @@ const InvoiceItems = ({
       </Box>
 
       {items.map((item, index) => (
-        <Grid container key={index} spacing={1} sx={{ mb: 1 }}>
+        <Grid 
+          container 
+          key={index} 
+          spacing={1} 
+          sx={{ mb: 1 }}
+          onKeyDown={(e) => handleKeyDown(e, index)}
+        >
           <Grid item xs={12} md={3.5}>
             <Autocomplete
               size="small"
