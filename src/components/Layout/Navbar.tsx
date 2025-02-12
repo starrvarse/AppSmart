@@ -15,16 +15,44 @@ const Navbar = () => {
       position="fixed" 
       sx={{ 
         zIndex: (theme) => theme.zIndex.drawer + 1,
-        bgcolor: 'background.paper',
-        color: 'text.primary',
-        boxShadow: 1
+        bgcolor: '#ffffff',
+        color: '#1a237e',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.12)'
       }}
     >
       <Toolbar>
-        <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-          DMS
-        </Typography>
-        <IconButton color="inherit" onClick={handleSignOut}>
+        <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
+          <img 
+            src="/logo.png" 
+            alt="Logo" 
+            style={{ 
+              height: '55px',
+              marginRight: '16px',
+              display: 'block'
+            }} 
+          />
+          <Typography 
+            variant="h6" 
+            noWrap 
+            component="div"
+            sx={{ 
+              fontWeight: 500,
+              letterSpacing: 0.5,
+              color: '#1a237e'
+            }}
+          >
+            Smart Invoicing
+          </Typography>
+        </Box>
+        <IconButton 
+          sx={{ 
+            color: '#1a237e',
+            '&:hover': {
+              bgcolor: 'rgba(26,35,126,0.04)'
+            }
+          }} 
+          onClick={handleSignOut}
+        >
           <LogoutIcon />
         </IconButton>
       </Toolbar>
