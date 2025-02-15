@@ -52,6 +52,7 @@ interface FormData {
   baseUnitId: number;
   baseRate: number;
   baseWholesaleRate: number;
+  purchaseRate?: number;
   hsnCode: string;
   companyId: number;
   taxPercentage: number;
@@ -74,6 +75,7 @@ const AddProduct = () => {
     baseUnitId: 0,
     baseRate: 0,
     baseWholesaleRate: 0,
+    purchaseRate: 0,
     hsnCode: '',
     companyId: 0,
     taxPercentage: 0,
@@ -106,6 +108,7 @@ const AddProduct = () => {
             baseUnitId: product.baseUnitId,
             baseRate: roundToTwo(product.baseRate),
             baseWholesaleRate: roundToTwo(product.baseWholesaleRate || 0),
+            purchaseRate: roundToTwo(product.purchaseRate || 0),
             hsnCode: product.hsnCode || '',
             companyId: product.companyId || 0,
             taxPercentage: product.taxPercentage || 0,
@@ -223,7 +226,7 @@ const AddProduct = () => {
     }
   }, [formData.baseRate, formData.baseWholesaleRate]);
 
-  const handleBaseRateChange = (field: 'baseRate' | 'baseWholesaleRate', value: number) => {
+  const handleBaseRateChange = (field: 'baseRate' | 'baseWholesaleRate' | 'purchaseRate', value: number) => {
     setFormData(prev => ({
       ...prev,
       [field]: roundToTwo(value),
@@ -329,6 +332,17 @@ const AddProduct = () => {
                   label="Base Wholesale Rate"
                   value={formData.baseWholesaleRate}
                   onChange={(e) => handleBaseRateChange('baseWholesaleRate', Number(e.target.value))}
+                  inputProps={{ step: "0.01" }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  size="small"
+                  fullWidth
+                  type="number"
+                  label="Purchase Rate"
+                  value={formData.purchaseRate}
+                  onChange={(e) => handleBaseRateChange('purchaseRate', Number(e.target.value))}
                   inputProps={{ step: "0.01" }}
                 />
               </Grid>

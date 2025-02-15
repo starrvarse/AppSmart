@@ -47,6 +47,7 @@ interface Product {
   baseUnitId: number;
   baseRate: number;
   baseWholesaleRate: number | null;
+  purchaseRate?: number;
   hsnCode?: string;
   companyId: number;
   taxPercentage: number;

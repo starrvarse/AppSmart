@@ -8,6 +8,7 @@ export const createProduct = (req, res) => {
     baseUnitId,
     baseRate,
     baseWholesaleRate,
+    purchaseRate,
     hsnCode,
     companyId,
     taxPercentage,
@@ -20,8 +21,8 @@ export const createProduct = (req, res) => {
       const productStmt = db.prepare(`
         INSERT INTO products (
           name, code, category_id, base_unit_id, base_rate,
-          base_wholesale_rate, hsn_code, company_id, tax_percentage
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+          base_wholesale_rate, purchase_rate, hsn_code, company_id, tax_percentage
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
       
       const productResult = productStmt.run(
@@ -31,6 +32,7 @@ export const createProduct = (req, res) => {
         baseUnitId,
         baseRate,
         baseWholesaleRate || null,
+        purchaseRate || null,
         hsnCode || null,
         companyId || null,
         taxPercentage || null
@@ -125,8 +127,8 @@ export const importProducts = async (req, res) => {
           const productStmt = db.prepare(`
             INSERT INTO products (
               name, code, category_id, base_unit_id, base_rate,
-              base_wholesale_rate, hsn_code, company_id, tax_percentage
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+              base_wholesale_rate, purchase_rate, hsn_code, company_id, tax_percentage
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           `);
           
           const productResult = productStmt.run(
@@ -136,6 +138,7 @@ export const importProducts = async (req, res) => {
             baseUnitId,
             product.base_rate,
             product.base_wholesale_rate || null,
+            product.purchase_rate || null,
             product.hsn_code || null,
             companyId,
             product.tax_percentage || null
@@ -215,6 +218,7 @@ export const getAllProducts = (req, res) => {
         p.base_unit_id as baseUnitId,
         p.base_rate as baseRate,
         p.base_wholesale_rate as baseWholesaleRate,
+        p.purchase_rate as purchaseRate,
         p.hsn_code as hsnCode,
         p.company_id as companyId,
         p.tax_percentage as taxPercentage,
@@ -248,6 +252,7 @@ export const getProductById = (req, res) => {
         p.base_unit_id as baseUnitId,
         p.base_rate as baseRate,
         p.base_wholesale_rate as baseWholesaleRate,
+        p.purchase_rate as purchaseRate,
         p.hsn_code as hsnCode,
         p.company_id as companyId,
         p.tax_percentage as taxPercentage,
@@ -296,6 +301,7 @@ export const updateProduct = (req, res) => {
     baseUnitId,
     baseRate,
     baseWholesaleRate,
+    purchaseRate,
     hsnCode,
     companyId,
     taxPercentage,
@@ -308,7 +314,7 @@ export const updateProduct = (req, res) => {
       const productStmt = db.prepare(`
         UPDATE products SET
           name = ?, code = ?, category_id = ?, base_unit_id = ?,
-          base_rate = ?, base_wholesale_rate = ?, hsn_code = ?,
+          base_rate = ?, base_wholesale_rate = ?, purchase_rate = ?, hsn_code = ?,
           company_id = ?, tax_percentage = ?
         WHERE id = ?
       `);
@@ -320,6 +326,7 @@ export const updateProduct = (req, res) => {
         baseUnitId,
         baseRate,
         baseWholesaleRate || null,
+        purchaseRate || null,
         hsnCode || null,
         companyId || null,
         taxPercentage || null,

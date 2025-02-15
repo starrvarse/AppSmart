@@ -50,6 +50,7 @@ db.exec(`
     base_unit_id INTEGER NOT NULL,
     base_rate REAL NOT NULL,
     base_wholesale_rate REAL,
+    purchase_rate REAL,
     hsn_code TEXT,
     company_id INTEGER,
     tax_percentage REAL,
