@@ -126,6 +126,28 @@ async function handleResponse<T>(response: Response): Promise<T> {
   return response.json();
 }
 
+interface Scheme {
+  id: number;
+  name: string;
+  type: 'category' | 'product';
+  discountType: 'percentage' | 'flat' | 'buy_x_get_y';
+  discountValue: number | null;
+  buyQuantity: number | null;
+  freeQuantity: number | null;
+  startDate: string;
+  endDate: string;
+  categories?: { id: number; name: string; }[];
+  products?: { 
+    id: number; 
+    name: string; 
+    code: string; 
+    unitId?: number;
+    unit_name?: string;
+    quantity?: number;
+  }[];
+  createdAt: string;
+}
+
 export const api = {
   company: {
     get: async (): Promise<Company> => {
@@ -426,6 +448,43 @@ export const api = {
 
     delete: async (id: number): Promise<void> => {
       const response = await fetch(`${API_URL}/invoices/${id}`, {
+        method: 'DELETE',
+      });
+      return handleResponse<void>(response);
+    },
+  },
+
+  schemes: {
+    create: async (data: Omit<Scheme, 'id' | 'createdAt'>): Promise<{ id: number }> => {
+      const response = await fetch(`${API_URL}/schemes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      return handleResponse<{ id: number }>(response);
+    },
+
+    update: async (id: number, data: Omit<Scheme, 'id' | 'createdAt'>): Promise<{ id: number }> => {
+      const response = await fetch(`${API_URL}/schemes/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      return handleResponse<{ id: number }>(response);
+    },
+
+    getAll: async (): Promise<Scheme[]> => {
+      const response = await fetch(`${API_URL}/schemes`);
+      return handleResponse<Scheme[]>(response);
+    },
+
+    getById: async (id: number): Promise<Scheme> => {
+      const response = await fetch(`${API_URL}/schemes/${id}`);
+      return handleResponse<Scheme>(response);
+    },
+
+    delete: async (id: number): Promise<void> => {
+      const response = await fetch(`${API_URL}/schemes/${id}`, {
         method: 'DELETE',
       });
       return handleResponse<void>(response);

@@ -149,6 +149,38 @@ db.exec(`
     logo TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
+
+  CREATE TABLE IF NOT EXISTS schemes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    type TEXT CHECK(type IN ('category', 'product')) NOT NULL,
+    discount_type TEXT CHECK(discount_type IN ('percentage', 'flat', 'buy_x_get_y')) NOT NULL,
+    discount_value REAL,
+    buy_quantity INTEGER,
+    free_quantity INTEGER,
+    start_date DATE,
+    end_date DATE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS scheme_categories (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    scheme_id INTEGER NOT NULL,
+    category_id INTEGER NOT NULL,
+    FOREIGN KEY (scheme_id) REFERENCES schemes(id),
+    FOREIGN KEY (category_id) REFERENCES categories(id)
+  );
+
+  CREATE TABLE IF NOT EXISTS scheme_products (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    scheme_id INTEGER NOT NULL,
+    product_id INTEGER NOT NULL,
+    unit_id INTEGER NOT NULL,
+    quantity REAL NOT NULL DEFAULT 1,
+    FOREIGN KEY (scheme_id) REFERENCES schemes(id),
+    FOREIGN KEY (product_id) REFERENCES products(id),
+    FOREIGN KEY (unit_id) REFERENCES units(id)
+  );
 `);
 
 // Enable foreign keys

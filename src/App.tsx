@@ -14,6 +14,8 @@ import EditInvoice from './pages/Invoice/EditInvoice';
 import CustomerPage from './pages/Customer/Customer';
 import AddCustomer from './pages/Customer/AddCustomer';
 import CompanyDetails from './pages/CompanyDetails/CompanyDetails';
+import SchemePage from './pages/Scheme/Scheme';
+import AddScheme from './pages/Scheme/AddScheme';
 
 function App() {
   return (
@@ -38,6 +40,9 @@ function App() {
       <Route path="/customers/add" element={<AddCustomer />} />
       <Route path="/customers/edit/:id" element={<AddCustomer />} />
       <Route path="/company" element={<CompanyDetails />} />
+      <Route path="/schemes" element={<SchemePage />} />
+      <Route path="/schemes/add" element={<AddScheme />} />
+      <Route path="/schemes/edit/:id" element={<AddScheme />} />
 
       {/* Default route */}
       <Route path="/" element={<Navigate to="/auth/signin" replace />} />

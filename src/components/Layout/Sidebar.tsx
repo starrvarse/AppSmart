@@ -18,6 +18,7 @@ import {
   Receipt as ReceiptIcon,
   People as PeopleIcon,
   Store as StoreIcon,
+  LocalOffer as LocalOfferIcon,
 } from '@mui/icons-material';
 
 const menuItems = [
@@ -39,6 +40,11 @@ const menuItems = [
     text: 'Invoices',
     icon: <ReceiptIcon />,
     path: '/invoices',
+  },
+  {
+    text: 'Schemes',
+    icon: <LocalOfferIcon />,
+    path: '/schemes',
   },
   {
     text: 'Company Details',

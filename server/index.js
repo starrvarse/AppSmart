@@ -9,6 +9,7 @@ import customerRoutes from './routes/customerRoutes.js';
 import invoiceRoutes from './routes/invoiceRoutes.js';
 import companyRoutes from './routes/companyRoutes.js';
 import documentRoutes from './routes/documentRoutes.js';
+import schemeRoutes from './routes/schemeRoutes.js';
 import { requestLogger } from './middleware/requestLogger.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
@@ -41,6 +42,7 @@ app.use('/api/customers', customerRoutes);
 app.use('/api/invoices', invoiceRoutes);
 app.use('/api/company', companyRoutes);
 app.use('/api/documents', documentRoutes);
+app.use('/api/schemes', schemeRoutes);
 
 // Error handling
 app.use(errorHandler);
